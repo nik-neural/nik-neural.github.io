@@ -557,28 +557,40 @@
         toast("複製唔到，去貼上頁手動揀");
       });
     } else if (act === "apply-paste") {
-      const text = $("#pasteBox")?.value || "";
-      if (!text.trim()) {
-        toast("未有貼內容。由「侍藍行程」嗰行開始成段貼");
-        return;
-      }
-      const parsed = TripText.parse(text, seed);
-      if (!parsed.days.length && !parsed.people.length) {
-        toast("認唔到。要貼以「侍藍行程」開頭嗰段，唔係上面開機步驟");
-        return;
-      }
-      trip = parsed;
-      if (!(trip.checklist7d || []).length && (seed.checklist7d || []).length) {
-        trip.checklist7d = seed.checklist7d;
-      }
-      fixupPlaces();
-      persistTrip();
-      editDay = null;
-      morePage = null;
-      tab = "plan";
-      toast("行程已更新");
-      render();
+      applyPastedTrip();
     }
+  }
+
+  async function applyPastedTrip() {
+    let text = ($("#pasteBox")?.value || "").trim();
+    try {
+      const clip = (await navigator.clipboard.readText() || "").trim();
+      if (clip) {
+        text = clip;
+        const box = $("#pasteBox");
+        if (box) box.value = clip;
+      }
+    } catch (_) { /* iPhone 可能要先准貼上；用格入面已有嘅字 */ }
+    if (!text) {
+      toast("未讀到剪貼簿。長按格入面貼上，再撳一次");
+      return;
+    }
+    const parsed = TripText.parse(text, seed);
+    if (!parsed.days.length && !parsed.people.length) {
+      toast("認唔到。剪貼簿要由「侍藍行程」開頭嗰段");
+      return;
+    }
+    trip = parsed;
+    if (!(trip.checklist7d || []).length && (seed.checklist7d || []).length) {
+      trip.checklist7d = seed.checklist7d;
+    }
+    fixupPlaces();
+    persistTrip();
+    editDay = null;
+    morePage = null;
+    tab = "plan";
+    toast("行程已更新");
+    render();
   }
 
   function saveDayEdit(date, keep) {
@@ -681,7 +693,7 @@
     const current = trip.days.length ? TripText.serialize(trip) : "";
     return `<section class="card glass">
       <h3>WhatsApp 複製／貼上</h3>
-      <p class="tiny">一鍵複製去 WhatsApp。收到新行程就貼呢格，撳更新。</p>
+      <p class="tiny">WhatsApp 複製行程之後，返嚟撳「貼上並更新」（會讀剪貼簿）。iPhone 可能問准唔准貼。</p>
       <button class="btn" data-act="copy-trip">複製行程</button>
       <textarea class="field" id="pasteBox" rows="10" placeholder="喺 WhatsApp 複製行程，貼呢度">${esc(current)}</textarea>
       <button class="btn" style="margin-top:8px" data-act="apply-paste">貼上並更新</button>
