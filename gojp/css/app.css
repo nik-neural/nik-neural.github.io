@@ -273,7 +273,7 @@ body::after {
 }
 .logo { width: 16px; height: 16px; flex: none; display: block; }
 .nav-lab { line-height: 1; display: inline-block; }
-.btn.apple .logo { transform: translateY(1px); }
+.btn.apple .logo { transform: translateY(-3px); }
 .btn.google { }
 .btn.wa {
   background: linear-gradient(180deg, #25d366, #1ebe57);
