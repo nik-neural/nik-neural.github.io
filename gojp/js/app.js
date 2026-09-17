@@ -285,15 +285,16 @@
 
   function appleURL(p, dir) {
     if (!p) return "https://maps.apple.com/";
-    const q = (p.appleQuery || p.query || p.address || p.nameJa || p.name || "").trim();
-    const encoded = encodeURIComponent(q);
     if (p.lat != null && p.lng != null) {
-      if (dir) return `https://maps.apple.com/?daddr=${p.lat},${p.lng}&dirflg=d`;
-      return `https://maps.apple.com/?ll=${p.lat},${p.lng}&z=19`;
+      const pin = `${p.lat},${p.lng}`;
+      if (dir) return `https://maps.apple.com/?daddr=${pin}&dirflg=d`;
+      return `https://maps.apple.com/?ll=${pin}&z=19`;
     }
-    if (dir && q) return `https://maps.apple.com/?daddr=${encoded}&dirflg=d`;
-    if (q) return `https://maps.apple.com/?q=${encoded}`;
-    return "https://maps.apple.com/";
+    const q = (p.appleQuery || p.nameJa || p.name || "").trim();
+    if (!q) return "https://maps.apple.com/";
+    const encoded = encodeURIComponent(q);
+    if (dir) return `https://maps.apple.com/?daddr=${encoded}&dirflg=d`;
+    return `https://maps.apple.com/?q=${encoded}`;
   }
   function googleURL(p, dir) {
     if (!p) return "https://www.google.com/maps";
@@ -303,7 +304,22 @@
     if (dir) return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`;
   }
-  function fixupPlaces() {}
+  function fixupPlaces() {
+    const withC = (trip.places || []).filter((p) => p.lat != null && p.lng != null);
+    (trip.places || []).forEach((p) => {
+      if (p.lat != null) return;
+      const blob = `${p.address || ""} ${p.query || ""} ${p.name || ""}`;
+      const keys = blob.match(/\d{3,5}-\d{1,4}/g) || [];
+      const hit = withC.find((q) => {
+        const qb = `${q.address || ""} ${q.query || ""} ${q.name || ""}`;
+        return keys.some((k) => qb.includes(k));
+      });
+      if (hit) {
+        p.lat = hit.lat;
+        p.lng = hit.lng;
+      }
+    });
+  }
 
   function tierChip(n) {
     const label = trip.meta.tiers[String(n)] || `①②③`[n - 1] || "";

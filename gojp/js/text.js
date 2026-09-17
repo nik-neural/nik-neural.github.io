@@ -417,6 +417,20 @@
       const pl = t.places.find((p) => /福岡/.test(p.name) && /國際/.test(p.name));
       if (pl && /FUK/.test(f.to?.code || "")) f.to.placeId = pl.id;
     });
+    const withC = (t.places || []).filter((p) => p.lat != null && p.lng != null);
+    (t.places || []).forEach((p) => {
+      if (p.lat != null) return;
+      const blob = `${p.address || ""} ${p.query || ""} ${p.name || ""}`;
+      const keys = blob.match(/\d{3,5}-\d{1,4}/g) || [];
+      const hit = withC.find((q) => {
+        const qb = `${q.address || ""} ${q.query || ""} ${q.name || ""}`;
+        return keys.some((k) => qb.includes(k));
+      });
+      if (hit) {
+        p.lat = hit.lat;
+        p.lng = hit.lng;
+      }
+    });
     return t;
   }
 
