@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0A2F7A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="起飛">
+  <meta name="description" content="起飛：離線行程 PWA。WhatsApp 複製貼上。資料留喺瀏覽器。">
+  <title>起飛</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon.svg">
+  <link rel="stylesheet" href="./css/app.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M3 20c6-4 10 2 16-1s8-3 10-2" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M4 23c7-3 11 1 16-1" stroke="white" stroke-opacity=".55" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="24" cy="9" r="3.2" fill="#E60012"/>
+          </svg>
+        </div>
+        <div>
+          <h1>起飛</h1>
+          <p id="subline">本地行程</p>
+        </div>
+      </div>
+      <div class="wx-wrap">
+        <button class="wx-btn" id="wxBtn" type="button" aria-label="天氣同警告">
+          <span id="wxIcon">☁</span>
+          <span class="wx-dot" id="wxDot"></span>
+        </button>
+        <div class="wx-pop" id="wxPop"></div>
+      </div>
+    </header>
+
+    <main id="view"></main>
+    <nav class="tabs glass" id="tabs"></nav>
+
+    <div id="sheet" class="sheet"></div>
+    <div id="toast" class="toast glass"></div>
+    <div id="gate" class="gate">
+      <div class="box glass">
+        <div class="kicker">起飛</div>
+        <h2>呢部手機用邊套地圖？</h2>
+        <p class="muted">主駕駛用 Google 地圖，副駕駛用蘋果地圖。兩套一齊開，對吓路線先起步。設定只存呢部手機。</p>
+        <div class="choice">
+          <button class="btn" data-role="driver" data-planner="1">主駕駛 · Google 地圖<br><span class="tiny" style="color:#062056">預設</span></button>
+          <button class="btn ghost" data-role="copilot" data-planner="1">副駕駛 · 蘋果地圖</button>
+          <button class="btn ghost" data-role="driver" data-planner="0">團友 · 只睇</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./js/text.js"></script>
+  <script src="./js/app.js" defer></script>
+</body>
+</html>

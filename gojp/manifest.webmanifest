@@ -1,0 +1,16 @@
+{
+  "id": "/gojp/",
+  "name": "起飛",
+  "short_name": "起飛",
+  "description": "起飛：離線行程。WhatsApp 複製貼上。資料留喺瀏覽器。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A2F7A",
+  "theme_color": "#0A2F7A",
+  "lang": "zh-Hant-HK",
+  "icons": [
+    { "src": "./icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

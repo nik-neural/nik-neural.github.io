@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "id": "samurai-trip",
+    "title": "侍藍行程",
+    "subtitle": "WhatsApp 貼上",
+    "dataVersion": 1,
+    "updated": "",
+    "tz": "Asia/Tokyo",
+    "tzHK": "Asia/Hong_Kong",
+    "engine": "神算子",
+    "year": 2026,
+    "tiers": {
+      "1": "①已確認",
+      "2": "②10月前可能變",
+      "3": "③估算／建議"
+    }
+  },
+  "people": [],
+  "flights": [],
+  "stays": [],
+  "car": { "company": "", "pickup": {}, "dropoff": {} },
+  "places": [],
+  "days": [],
+  "dining": [],
+  "unlocked": [],
+  "checklist7d": [
+    { "id": "aso", "title": "阿蘇警戒＋草千里", "how": "JMA ＋ aso-volcano.jp", "url": "https://www.aso-volcano.jp/" },
+    { "id": "ropeway", "title": "纜車運行、有冇風停", "how": "官網", "url": "https://www.beppu-ropeway.co.jp/" },
+    { "id": "bridge", "title": "吊橋運行", "how": "官網", "url": "https://www.yumeooturihashi.com/info.html" },
+    { "id": "weather", "title": "九州北部預報／颱風", "how": "氣象廳", "url": "https://www.jma.go.jp/" },
+    { "id": "orix", "title": "租車確認書店名、取還時間、滿油", "how": "確認電郵" },
+    { "id": "taishoya", "title": "住宿 checkout／晚餐時段", "how": "確認書" },
+    { "id": "airbnb", "title": "民宿 checkout、停車位", "how": "住宿訊息" },
+    { "id": "return-flight", "title": "回程航班時間", "how": "航空公司 APP" }
+  ],
+  "abcd": [],
+  "emergency": {
+    "disclaimer": "簡介，唔係法律意見。現場以警察／租車公司指示為準。",
+    "numbers": [
+      { "id": "police", "name": "警察", "tel": "110", "when": "任何碰撞、有人傷、財物損。即使輕微都建議報。" },
+      { "id": "ambulance", "name": "救護／消防", "tel": "119", "when": "有傷、火、高速公路緊急。" }
+    ],
+    "steps": [
+      "停安全位。開警示燈。車尾三角牌。",
+      "有傷：119。跟住 110。救人優先。",
+      "即使刮花都當事故。唔報警察＋租車公司，保險可以作廢。",
+      "影相：全景、損壞、車牌、路面、行車記錄儀。",
+      "交換名、電話、保險、車牌、駕照。唔好簽睇唔明嘅日文認錯紙。",
+      "打租車公司事故中心（貸渡證上嘅電話）。",
+      "通知旅行保險／信用卡租車保險。"
+    ]
+  }
+}
