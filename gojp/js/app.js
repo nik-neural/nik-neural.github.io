@@ -725,8 +725,6 @@
     const hard = tripOn ? nextHard(showY) : d.blocks.find((b) => b.hard);
     const cd = fmt.hm(depLeft());
     const nxt = nextDep();
-    const firstFly = (trip.flights || []).find((f) => f.checkinOpen) || trip.flights[0];
-    const ci = checkinState(firstFly);
     const depLines = !tripOn
       ? depQueue().map((x) => {
           const on = nxt && x.f.no === nxt.f.no;
@@ -750,8 +748,6 @@
         ${hard ? `<p class="muted" style="margin:12px 0 0">下一個硬性時間：<b>${esc(hard.time || "")} ${esc(hard.title)}</b></p>` : ""}
       </section>
 
-      ${!tripOn ? ci.card : ""}
-
       ${st ? `<section class="card glass">
         <div class="row"><h3 style="margin:0">今晚住</h3>${tierChip(st.tier)}</div>
         <div class="title" style="font-weight:750;margin:6px 0">${esc(st.short)} · ${esc(st.name)}</div>
@@ -770,43 +766,6 @@
       ${d.date === "2026-10-08" ? renderDining() : ""}
       ${renderUnlockedMini()}
     `;
-  }
-
-  function checkinDaysLeft(f) {
-    if (!f?.checkinOpen) return "—";
-    let t = f.checkinOpen.at ? Date.parse(f.checkinOpen.at) : NaN;
-    if (Number.isNaN(t) && f.checkinOpen.label) {
-      const m = String(f.checkinOpen.label).match(/(\d{1,2})\/(\d{1,2})/);
-      if (m) t = new Date(2026, +m[1] - 1, +m[2], 10, 20).getTime();
-    }
-    if (Number.isNaN(t)) return "—";
-    return Math.max(0, Math.ceil((t - Date.now()) / 86400000));
-  }
-
-  function checkinState(f) {
-    if (!f?.checkinOpen) return { label: "—", card: "" };
-    const now = Date.now();
-    const open = f.checkinOpen.at ? Date.parse(f.checkinOpen.at) : NaN;
-    const close = f.checkinClose?.at ? Date.parse(f.checkinClose.at) : NaN;
-    let label = "未開";
-    let body = `網上預辦 ${f.checkinOpen.label} 開。`;
-    if (!Number.isNaN(open) && !Number.isNaN(close)) {
-      if (now >= open && now <= close) { label = "而家開緊"; body = "可以網上預辦。福岡無電子登機證，櫃位出紙本。"; }
-      else if (now > close) { label = "已截止"; body = "改櫃位。香港櫃位起飛前 60 分關。"; }
-      else {
-        const left = fmt.hm(open - now);
-        label = left.d > 0 ? `${left.d}日後` : `${left.h}h`;
-      }
-    } else {
-      label = f.checkinOpen.label || "預辦";
-    }
-    const card = `
-      <section class="card glass">
-        <div class="row"><h3 style="margin:0">${esc(f.no || "")} 預辦</h3><span class="pill ${label === "而家開緊" ? "live" : "ok"}">${esc(label)}</span></div>
-        <p class="muted">${body}</p>
-        ${f.checkinUrl ? `<a class="btn" href="${esc(f.checkinUrl)}">開港航預辦頁</a>` : ""}
-      </section>`;
-    return { label, card };
   }
 
   function renderBlocks(d) {
