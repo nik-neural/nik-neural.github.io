@@ -196,8 +196,8 @@
   function defaultStore() {
     return {
       role: "driver",
-      planner: false,
-      seenGate: false,
+      planner: true,
+      seenGate: true,
       checks: {},
       notes: {},
       seats: {},
@@ -410,7 +410,7 @@
     persistTrip();
     if (!store.seedVersion) store.seedVersion = seed.meta.dataVersion;
     save();
-    if (!store.seenGate) $("#gate").classList.add("on");
+    store.seenGate = true;
     bind();
     render();
     setInterval(tickCountdown, 1000);
@@ -439,7 +439,6 @@
     $("#sheet").addEventListener("click", (e) => {
       if (e.target.id === "sheet") closeSheet();
     });
-    $("#gate").addEventListener("click", onGate);
     $("#wxBtn").addEventListener("click", (e) => {
       e.stopPropagation();
       toggleWxPop();
@@ -1001,7 +1000,16 @@
     if (morePage === "settings") return withBack("呢部機", viewSettings());
     const nPlace = trip.places.filter((p) => p.inGuide).length;
     const nOpen = trip.unlocked.length;
+    const googleOn = store.role !== "copilot";
     return `<section class="card glass">
+      <h3>地圖</h3>
+      <p class="tiny">預設 Google。只影響呢部機導航掣，唔使一開 App 就揀。</p>
+      <div class="choice-row">
+        <button class="btn ${googleOn ? "" : "ghost"}" data-act="set-role" data-role="driver">${logoG()}<span class="nav-lab">Google 地圖</span></button>
+        <button class="btn ${googleOn ? "ghost" : ""}" data-act="set-role" data-role="copilot">${logoA()}<span class="nav-lab">蘋果地圖</span></button>
+      </div>
+    </section>
+    <section class="card glass">
       <h3>更多</h3>
       <p class="tiny">內頁分開睇。改行程用編輯；傳團友用複製貼上。</p>
       ${menu("paste", "📋", "複製／貼上行程", "WhatsApp 一鍵")}
