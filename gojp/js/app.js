@@ -298,8 +298,9 @@
   }
   function googleURL(p, dir) {
     if (!p) return "https://www.google.com/maps";
-    const q = (p.googleQuery || p.query || p.address || p.name || "").trim();
-    const dest = q || (p.lat != null ? `${p.lat},${p.lng}` : "");
+    const dest = (p.lat != null && p.lng != null)
+      ? `${p.lat},${p.lng}`
+      : (p.googleQuery || p.nameJa || p.name || "").trim();
     if (!dest) return "https://www.google.com/maps";
     if (dir) return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`;
@@ -317,6 +318,7 @@
       if (hit) {
         p.lat = hit.lat;
         p.lng = hit.lng;
+        if (hit.googleQuery) p.googleQuery = hit.googleQuery;
       }
     });
   }
