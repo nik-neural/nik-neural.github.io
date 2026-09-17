@@ -283,14 +283,18 @@
   function stay(id) { return trip.stays.find((s) => s.id === id); }
   function person(id) { return trip.people.find((p) => p.id === id); }
 
+  function mapLabel(p) {
+    return (p.nameJa || p.query || p.googleQuery || p.name || "").trim();
+  }
   function appleURL(p, dir) {
     if (!p) return "https://maps.apple.com/";
+    const label = encodeURIComponent(mapLabel(p) || "pin");
     if (p.lat != null && p.lng != null) {
       const pin = `${p.lat},${p.lng}`;
-      if (dir) return `https://maps.apple.com/?daddr=${pin}&dirflg=d`;
-      return `https://maps.apple.com/?ll=${pin}&z=19`;
+      if (dir) return `https://maps.apple.com/?daddr=${pin}&q=${label}&dirflg=d`;
+      return `https://maps.apple.com/?ll=${pin}&q=${label}&z=18`;
     }
-    const q = (p.appleQuery || p.nameJa || p.name || "").trim();
+    const q = (p.appleQuery || mapLabel(p) || "").trim();
     if (!q) return "https://maps.apple.com/";
     const encoded = encodeURIComponent(q);
     if (dir) return `https://maps.apple.com/?daddr=${encoded}&dirflg=d`;
@@ -298,9 +302,13 @@
   }
   function googleURL(p, dir) {
     if (!p) return "https://www.google.com/maps";
-    const dest = (p.lat != null && p.lng != null)
-      ? `${p.lat},${p.lng}`
-      : (p.googleQuery || p.nameJa || p.name || "").trim();
+    const label = mapLabel(p);
+    if (p.lat != null && p.lng != null) {
+      const pin = `${p.lat},${p.lng}`;
+      if (dir) return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(pin)}&travelmode=driving`;
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pin)}`;
+    }
+    const dest = (p.googleQuery || label || "").trim();
     if (!dest) return "https://www.google.com/maps";
     if (dir) return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`;

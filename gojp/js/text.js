@@ -482,7 +482,7 @@
         const name = p[0];
         const q = p[1] || name;
         const coord = (p[2] || "").split(",");
-        const rec = { id: slug(name), name, query: q, address: q, kind: "sight", inGuide: true };
+        const rec = { id: slug(name), name, nameJa: q, query: q, address: q, kind: "sight", inGuide: true };
         if (coord.length === 2 && !isNaN(+coord[0])) {
           rec.lat = +coord[0];
           rec.lng = +coord[1];
