@@ -353,11 +353,23 @@
     location.href = "https://wa.me/?text=" + encodeURIComponent(text);
   }
 
+  function copyDay(ymd) {
+    const text = TripText.serializeDay(trip, ymd);
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => toast("已複製呢日，去另一部機貼上")).catch(() => {
+      morePage = "paste";
+      render();
+      const box = $("#pasteBox");
+      if (box) box.value = text;
+      toast("複製唔到，去貼上頁手動揀");
+    });
+  }
+
   function shareDay(ymd) {
     const d = day(ymd);
     if (!d) return;
     const lines = [
-      `九州北部 2026｜${fmt.md(ymd)}（${d.dow}）`,
+      `${trip.meta.title || "九州北部 2026"}｜${fmt.md(ymd)}（${d.dow}）`,
       d.theme,
       "",
     ];
@@ -484,6 +496,8 @@
       morePage = null;
       render();
       $("#view").scrollTop = 0;
+    } else if (act === "copy-day") {
+      copyDay(id);
     } else if (act === "share-day") {
       shareDay(id);
     } else if (act === "share-place") {
@@ -611,10 +625,18 @@
     }
     const parsed = TripText.parse(text, seed);
     if (!parsed.days.length && !parsed.people.length) {
-      toast("認唔到。剪貼簿要由「侍藍行程」開頭嗰段");
+      toast("認唔到。貼「複製行程」或「複製呢日」出嚟嗰段");
       return;
     }
-    trip = parsed;
+    const partial = !!parsed.meta.partial;
+    if (partial && (trip.days.length || trip.people.length)) {
+      trip = mergeIncoming(trip, parsed);
+      toast(`已加入 ${fmt.md(parsed.days[0].date)}`);
+    } else {
+      trip = parsed;
+      toast("行程已更新");
+    }
+    delete trip.meta.partial;
     if (!(trip.checklist7d || []).length && (seed.checklist7d || []).length) {
       trip.checklist7d = seed.checklist7d;
     }
@@ -623,8 +645,40 @@
     editDay = null;
     morePage = null;
     tab = "today";
-    toast("行程已更新");
     render();
+  }
+
+  function mergeIncoming(base, incoming) {
+    const out = JSON.parse(JSON.stringify(base));
+    (incoming.places || []).forEach((p) => {
+      const exist = (out.places || []).find((x) => x.id === p.id || x.name === p.name);
+      if (exist) Object.assign(exist, p, { id: exist.id });
+      else {
+        if (!out.places) out.places = [];
+        out.places.push(p);
+      }
+    });
+    (incoming.stays || []).forEach((s) => {
+      const exist = (out.stays || []).find((x) => x.id === s.id || x.name === s.name);
+      if (exist) Object.assign(exist, s, { id: exist.id });
+      else {
+        if (!out.stays) out.stays = [];
+        out.stays.push(s);
+      }
+    });
+    (incoming.days || []).forEach((d) => {
+      const idx = (out.days || []).findIndex((x) => x.date === d.date);
+      if (idx >= 0) out.days[idx] = d;
+      else {
+        if (!out.days) out.days = [];
+        out.days.push(d);
+        out.days.sort((a, b) => a.date.localeCompare(b.date));
+      }
+    });
+    if (incoming.meta?.title && (!out.meta.title || out.meta.title === "侍藍行程")) {
+      out.meta.title = incoming.meta.title;
+    }
+    return out;
   }
 
   function saveDayEdit(date, keep) {
@@ -728,7 +782,7 @@
     const current = trip.days.length ? TripText.serialize(trip) : "";
     return `<section class="card glass">
       <h3>WhatsApp 複製／貼上</h3>
-      <p class="tiny">WhatsApp 複製行程之後，返嚟撳「貼上並更新」（會讀剪貼簿）。iPhone 可能問准唔准貼。</p>
+      <p class="tiny">WhatsApp 複製行程之後，返嚟撳「貼上並更新」（會讀剪貼簿）。「複製呢日」出嚟嗰段都可以貼，會加／更新嗰日。iPhone 可能問准唔准貼。</p>
       <button class="btn" data-act="copy-trip">複製行程</button>
       <textarea class="field" id="pasteBox" rows="10" placeholder="喺 WhatsApp 複製行程，貼呢度">${esc(current)}</textarea>
       <button class="btn" style="margin-top:8px" data-act="apply-paste">貼上並更新</button>
@@ -862,7 +916,7 @@
           <h3 style="margin:0">時間表</h3>
           <div class="chip-row">
             <button class="pill" data-act="edit-day" data-id="${d.date}">編輯呢日</button>
-            <button class="pill" data-act="share-day" data-id="${d.date}">複製呢日</button>
+            <button class="pill" data-act="copy-day" data-id="${d.date}">複製呢日</button>
           </div>
         </div>
         ${renderBlocks(d)}

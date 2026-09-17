@@ -194,6 +194,133 @@
     return L.join("\n").trim() + "\n";
   }
 
+  function serializeDay(t, ymd) {
+    const d = (t.days || []).find((x) => x.date === ymd);
+    if (!d) return "";
+    const slice = emptyTrip();
+    slice.meta = Object.assign({}, t.meta);
+    slice.emergency = t.emergency;
+    const pids = new Set();
+    (d.blocks || []).forEach((b) => { if (b.placeId) pids.add(b.placeId); });
+    if (d.stayId) pids.add(d.stayId);
+    slice.places = (t.places || []).filter((p) => pids.has(p.id));
+    slice.stays = (t.stays || []).filter((s) => s.id === d.stayId || (s.nights || []).includes(d.date));
+    slice.days = [d];
+    const lines = serialize(slice).split("\n");
+    if (lines[0] === "侍藍行程") lines.splice(1, 0, "一日");
+    return lines.join("\n");
+  }
+
+  function destFromMapLine(line) {
+    const m = String(line || "").match(/https?:\/\/\S+/);
+    if (!m) return "";
+    try {
+      const u = new URL(m[0]);
+      const dest = u.searchParams.get("destination") || u.searchParams.get("daddr")
+        || u.searchParams.get("q") || u.searchParams.get("ll") || "";
+      return decodeURIComponent(String(dest).replace(/\+/g, " ")).trim();
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function placeFromDest(t, dest, fallbackName) {
+    if (!dest && !fallbackName) return "";
+    const coord = String(dest || "").match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+    if (coord) {
+      const name = fallbackName || dest;
+      const rec = {
+        id: slug(name),
+        name,
+        query: dest,
+        kind: "sight",
+        inGuide: true,
+        lat: +coord[1],
+        lng: +coord[2],
+      };
+      const exist = t.places.find((p) => p.id === rec.id || p.name === name
+        || (p.lat === rec.lat && p.lng === rec.lng));
+      if (exist) {
+        if (exist.lat == null) { exist.lat = rec.lat; exist.lng = rec.lng; }
+        return exist.id;
+      }
+      t.places.push(rec);
+      return rec.id;
+    }
+    return findPlace(t, dest || fallbackName);
+  }
+
+  function parseHumanDay(raw, t) {
+    const lines = String(raw || "").replace(/\r\n/g, "\n").split("\n");
+    const head = (lines[0] || "").trim();
+    const hm = head.match(/20(\d{2})\s*[｜|]\s*(\d{1,2}\/\d{1,2})\s*[（(]([^）)]*)[）)]?/);
+    if (!hm) return t;
+    t.meta.year = 2000 + +hm[1];
+    t.meta.partial = true;
+    const date = parseMd(hm[2], t.meta.year);
+    const dow = (hm[3] || "").trim();
+    const titleBit = head.split(/[｜|]/)[0].replace(/20\d{2}/, "").trim();
+    if (titleBit) t.meta.title = titleBit;
+
+    let i = 1;
+    while (i < lines.length && !lines[i].trim()) i++;
+    let theme = "";
+    if (i < lines.length) {
+      const L = lines[i].trim();
+      if (!/^[·•⏰]/.test(L) && !/^今晚住/.test(L) && L !== "起飛") {
+        theme = L;
+        i++;
+      }
+    }
+
+    const curDay = { date, dow, theme, locked: true, blocks: [] };
+    t.days.push(curDay);
+
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      i++;
+      if (!line || line === "起飛") continue;
+      if (/^今晚住[：:]/.test(line)) {
+        const name = line.replace(/^今晚住[：:]\s*/, "").trim();
+        if (name) {
+          const pid = findPlace(t, name);
+          t.stays.push({
+            id: pid, name, short: name.split(/\s+/)[0],
+            nights: [date], checkIn: date, checkOut: "",
+            who: [], tier: 1, placeId: pid,
+          });
+          curDay.stayId = pid;
+        }
+        continue;
+      }
+      const bm = line.match(/^[·•⏰]\s*(?:(\d{1,2}:\d{2})(?:[–\-〜～](\d{1,2}:\d{2}))?\s+)?(.*)$/);
+      if (!bm) continue;
+      const title = (bm[3] || "").trim();
+      const block = {
+        id: `${date}-${curDay.blocks.length}`,
+        time: bm[1] || "",
+        end: bm[2] || "",
+        tz: "",
+        title,
+        hard: /^⏰/.test(line),
+        tier: 3,
+        status: "",
+        placeId: "",
+        nav: false,
+      };
+      while (i < lines.length && (/^\s+(Google|蘋果|G |)/.test(lines[i]) || /^\s+https?:/.test(lines[i]))) {
+        const dest = destFromMapLine(lines[i]);
+        i++;
+        if (dest && !block.placeId) {
+          block.placeId = placeFromDest(t, dest, title);
+          block.nav = true;
+        }
+      }
+      curDay.blocks.push(block);
+    }
+    return t;
+  }
+
   function parse(text, base) {
     const t = emptyTrip();
     if (base?.emergency) t.emergency = base.emergency;
@@ -208,6 +335,7 @@
     let sec = "";
     let curDay = null;
     let last = null;
+    let titled = false;
 
     function eatNote(line) {
       if (line.startsWith("備註：") && last) {
@@ -219,7 +347,11 @@
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      if (i === 1 && line && !line.startsWith("【") && !line.startsWith("v")) t.meta.title = line;
+      if (line === "一日") { t.meta.partial = true; continue; }
+      if (!titled && !sec && line && line !== "侍藍行程" && !line.startsWith("【") && !/^v\d+｜/.test(line)) {
+        t.meta.title = line;
+        titled = true;
+      }
       if (line.startsWith("v") && line.includes("｜")) {
         const m = line.match(/v(\d+)｜(.*)/);
         if (m) {
@@ -409,6 +541,8 @@
       }
     }
 
+    if (!t.days.length) parseHumanDay(raw, t);
+
     t.days.forEach((d) => {
       const st = t.stays.find((s) => (s.nights || []).includes(d.date));
       if (st) d.stayId = st.id;
@@ -434,5 +568,5 @@
     return t;
   }
 
-  w.TripText = { emptyTrip, serialize, parse };
+  w.TripText = { emptyTrip, serialize, serializeDay, parse };
 })(window);
