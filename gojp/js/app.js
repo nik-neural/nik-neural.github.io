@@ -316,9 +316,9 @@
     const g = googleURL(p, dir);
     return `
       <div class="navpair">
-        <a class="btn ${googleOn ? "" : "ghost"} google" href="${g}">${logoG()}<span class="nav-lab">Gemini導航</span></a>
+        <a class="btn ${googleOn ? "" : "ghost"} google" href="${g}">${logoG()}<span class="nav-lab">Gemini 導航</span></a>
         <span class="nav-gap" aria-hidden="true"></span>
-        <a class="btn ${googleOn ? "ghost" : ""} apple" href="${a}">${logoA()}<span class="nav-lab">Siri導航</span></a>
+        <a class="btn ${googleOn ? "ghost" : ""} apple" href="${a}">${logoA()}<span class="nav-lab">Siri 導航</span></a>
       </div>
 `;
   }
