@@ -241,10 +241,12 @@ body::after {
 
 .navpair {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
+  grid-template-columns: 1fr 36px 1fr;
+  gap: 0;
   margin-top: 10px;
+  align-items: stretch;
 }
+.nav-gap { display: block; min-width: 36px; }
 .btn {
   appearance: none; border: 0;
   color: #062056;
@@ -253,6 +255,7 @@ body::after {
   padding: 12px 10px;
   font-weight: 750;
   font-size: 13px;
+  line-height: 1;
   box-shadow: 0 6px 16px rgba(0, 20, 80, 0.18);
   cursor: pointer;
   text-align: center;
@@ -269,7 +272,8 @@ body::after {
   border: 0;
 }
 .logo { width: 16px; height: 16px; flex: none; display: block; }
-.btn.apple { }
+.nav-lab { line-height: 1; display: inline-block; }
+.btn.apple .logo { transform: translateY(1px); }
 .btn.google { }
 .btn.wa {
   background: linear-gradient(180deg, #25d366, #1ebe57);

@@ -316,8 +316,9 @@
     const g = googleURL(p, dir);
     return `
       <div class="navpair">
-        <a class="btn ${googleOn ? "" : "ghost"} google" href="${g}">${logoG()} Gemini導航</a>
-        <a class="btn ${googleOn ? "ghost" : ""} apple" href="${a}">${logoA()} Siri導航</a>
+        <a class="btn ${googleOn ? "" : "ghost"} google" href="${g}">${logoG()}<span class="nav-lab">Gemini導航</span></a>
+        <span class="nav-gap" aria-hidden="true"></span>
+        <a class="btn ${googleOn ? "ghost" : ""} apple" href="${a}">${logoA()}<span class="nav-lab">Siri導航</span></a>
       </div>
 `;
   }
@@ -664,8 +665,9 @@
         ${p.coordNote ? `<p class="tiny">${esc(p.coordNote)}</p>` : ""}
         ${navPair(p, true)}
         <div class="navpair" style="margin-top:8px">
-          <a class="btn ghost small" href="${googleURL(p, false)}">${logoG()} 地點詳情</a>
-          <a class="btn ghost small" href="${appleURL(p, false)}">${logoA()} 地點詳情</a>
+          <a class="btn ghost small" href="${googleURL(p, false)}">${logoG()}<span class="nav-lab">地點詳情</span></a>
+          <span class="nav-gap" aria-hidden="true"></span>
+          <a class="btn ghost small" href="${appleURL(p, false)}">${logoA()}<span class="nav-lab">地點詳情</span></a>
         </div>
         <button class="btn ghost" style="margin-top:12px" id="sheetClose">關閉</button>
       </div>`;
