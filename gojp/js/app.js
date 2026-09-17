@@ -558,9 +558,13 @@
       });
     } else if (act === "apply-paste") {
       const text = $("#pasteBox")?.value || "";
+      if (!text.trim()) {
+        toast("未有貼內容。由「侍藍行程」嗰行開始成段貼");
+        return;
+      }
       const parsed = TripText.parse(text, seed);
       if (!parsed.days.length && !parsed.people.length) {
-        toast("認唔到行程，睇下係咪侍藍行程格式");
+        toast("認唔到。要貼以「侍藍行程」開頭嗰段，唔係上面開機步驟");
         return;
       }
       trip = parsed;
