@@ -6,7 +6,7 @@
   function emptyTrip() {
     return {
       meta: {
-        id: "samurai-trip",
+        id: "gojp",
         title: "侍藍行程",
         subtitle: "WhatsApp 貼上",
         dataVersion: 1,
