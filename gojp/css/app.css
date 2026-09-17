@@ -255,12 +255,12 @@ html.standalone, html.standalone body, html.standalone #app {
 
 .navpair {
   display: grid;
-  grid-template-columns: 1fr 36px 1fr;
+  grid-template-columns: 1fr 10px 1fr;
   gap: 0;
   margin-top: 10px;
   align-items: stretch;
 }
-.nav-gap { display: block; min-width: 36px; }
+.nav-gap { display: block; min-width: 10px; }
 .btn {
   appearance: none; border: 0;
   color: #062056;
