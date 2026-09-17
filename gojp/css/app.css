@@ -16,7 +16,7 @@
   --radius: 22px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bot: env(safe-area-inset-bottom, 0px);
-  --tab-h: calc(58px + env(safe-area-inset-bottom, 0px));
+  --tab-h: calc(58px + max(8px, env(safe-area-inset-bottom, 0px)));
   --font: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "PingFang HK", "Noto Sans TC", sans-serif;
 }
 
@@ -62,6 +62,20 @@ body::after {
   flex-direction: column;
   position: relative;
   background: linear-gradient(180deg, rgba(6, 20, 51, 0.18), rgba(6, 20, 51, 0.04));
+}
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  html, body, #app {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+html.standalone, html.standalone body, html.standalone #app {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
 }
 
 .glass {
@@ -364,8 +378,8 @@ body::after {
 }
 
 .tabs {
-  position: absolute; left: 10px; right: 10px; bottom: 8px;
-  padding-bottom: var(--safe-bot);
+  position: absolute; left: 10px; right: 10px;
+  bottom: max(8px, env(safe-area-inset-bottom, 0px));
   border-radius: 24px;
   display: grid; grid-template-columns: repeat(5, 1fr);
   z-index: 20;
