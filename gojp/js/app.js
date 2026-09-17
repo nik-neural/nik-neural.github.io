@@ -230,11 +230,27 @@
   };
 
   function pad2(n) { return String(n).padStart(2, "0"); }
+  function flightWho(f) {
+    return (f?.who || []).map((id) => (trip.people.find((p) => p.id === id) || {}).display || id).filter(Boolean).join("／");
+  }
+  function flightDepMs(f) {
+    if (!f?.date || !f?.dep) return NaN;
+    return new Date(`${f.date}T${f.dep}:00+08:00`).getTime();
+  }
+  function depQueue() {
+    return (trip?.flights || [])
+      .filter((f) => f.date && f.dep)
+      .map((f) => ({ f, t: flightDepMs(f) }))
+      .filter((x) => !Number.isNaN(x.t))
+      .sort((a, b) => a.t - b.t);
+  }
+  function nextDep() {
+    const q = depQueue();
+    return q.find((x) => x.t > Date.now()) || q[0] || null;
+  }
   function depLeft() {
-    const f = (trip?.flights || []).find((x) => x.date && x.dep);
-    if (!f) return 0;
-    const iso = `${f.date}T${f.dep}:00+08:00`;
-    return new Date(iso) - Date.now();
+    const n = nextDep();
+    return n ? n.t - Date.now() : 0;
   }
   function tickCountdown() {
     if (!$("#countdown")) return;
@@ -708,21 +724,29 @@
     const st = stay(d.stayId);
     const hard = tripOn ? nextHard(showY) : d.blocks.find((b) => b.hard);
     const cd = fmt.hm(depLeft());
+    const nxt = nextDep();
     const firstFly = (trip.flights || []).find((f) => f.checkinOpen) || trip.flights[0];
     const ci = checkinState(firstFly);
+    const depLines = !tripOn
+      ? depQueue().map((x) => {
+          const on = nxt && x.f.no === nxt.f.no;
+          return `<div class="${on ? "" : "muted"}" style="margin-top:4px">${esc(x.f.no)} ${esc(x.f.dep)}　${esc(flightWho(x.f) || "")}${on ? " · 倒數跟呢班" : ""}</div>`;
+        }).join("")
+      : "";
 
     return `
       <section class="hero glass">
         <div class="kicker">${tripOn ? "今日" : "出發倒數"}</div>
-        <h2>${tripOn ? `${fmt.md(showY)} ${d.dow}` : "仲未起飛"}</h2>
-        <div class="sub">${esc(d.theme)}</div>
+        <h2>${tripOn ? `${fmt.md(showY)} ${d.dow}` : (nxt ? `${esc(nxt.f.no)} ${esc(nxt.f.dep)}` : "仲未起飛")}</h2>
+        <div class="sub">${tripOn ? esc(d.theme) : (nxt ? esc(flightWho(nxt.f) || "") : esc(d.theme))}</div>
         ${!tripOn ? `
           <div class="countdown" id="countdown">
             <div class="cd"><b id="cd-d">${cd.d}</b><span>日</span></div>
             <div class="cd"><b id="cd-h">${pad2(cd.h)}</b><span>時</span></div>
             <div class="cd"><b id="cd-m">${pad2(cd.m)}</b><span>分</span></div>
             <div class="cd"><b id="cd-s">${pad2(cd.s)}</b><span>秒</span></div>
-          </div>` : ""}
+          </div>
+          <div class="tiny" style="margin-top:10px">${depLines}</div>` : ""}
         ${hard ? `<p class="muted" style="margin:12px 0 0">下一個硬性時間：<b>${esc(hard.time || "")} ${esc(hard.title)}</b></p>` : ""}
       </section>
 
@@ -778,7 +802,7 @@
     }
     const card = `
       <section class="card glass">
-        <div class="row"><h3 style="margin:0">航班預辦</h3><span class="pill ${label === "而家開緊" ? "live" : "ok"}">${esc(label)}</span></div>
+        <div class="row"><h3 style="margin:0">${esc(f.no || "")} 預辦</h3><span class="pill ${label === "而家開緊" ? "live" : "ok"}">${esc(label)}</span></div>
         <p class="muted">${body}</p>
         ${f.checkinUrl ? `<a class="btn" href="${esc(f.checkinUrl)}">開港航預辦頁</a>` : ""}
       </section>`;
