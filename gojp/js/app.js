@@ -622,7 +622,7 @@
     persistTrip();
     editDay = null;
     morePage = null;
-    tab = "plan";
+    tab = "today";
     toast("行程已更新");
     render();
   }
