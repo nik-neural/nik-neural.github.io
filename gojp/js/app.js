@@ -612,6 +612,19 @@
         render();
         toast("複製唔到，去貼上頁手動揀");
       });
+    } else if (act === "copy-places") {
+      const text = TripText.serializePatch(trip);
+      if (!text.split("\n").some((l) => l.includes("｜"))) {
+        toast("未有地點座標");
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => toast("已複製地點補丁，WhatsApp 貼團友")).catch(() => {
+        morePage = "paste";
+        render();
+        const box = $("#pasteBox");
+        if (box) box.value = text;
+        toast("複製唔到，去貼上頁手動揀");
+      });
     } else if (act === "apply-paste") {
       applyPastedTrip();
     }
@@ -632,12 +645,20 @@
       return;
     }
     const parsed = TripText.parse(text, seed);
-    if (!parsed.days.length && !parsed.people.length) {
-      toast("認唔到。貼「複製行程」或「複製呢日」出嚟嗰段");
+    const nPlaces = (parsed.places || []).length;
+    const patch = !!parsed.meta.patch || (nPlaces && !parsed.days.length && !parsed.people.length);
+    if (!parsed.days.length && !parsed.people.length && !nPlaces) {
+      toast("認唔到。貼「複製行程」、「複製呢日」或地點補丁");
       return;
     }
-    const partial = !!parsed.meta.partial;
-    if (partial && (trip.days.length || trip.people.length)) {
+    if (patch) {
+      if (!(trip.days.length || trip.places.length)) {
+        toast("未有行程。先貼「複製行程」成篇");
+        return;
+      }
+      trip = mergeIncoming(trip, parsed);
+      toast(`已更新 ${nPlaces} 個地點`);
+    } else if (parsed.meta.partial && (trip.days.length || trip.people.length)) {
       trip = mergeIncoming(trip, parsed);
       toast(`已加入 ${fmt.md(parsed.days[0].date)}`);
     } else {
@@ -659,9 +680,13 @@
   function mergeIncoming(base, incoming) {
     const out = JSON.parse(JSON.stringify(base));
     (incoming.places || []).forEach((p) => {
-      const exist = (out.places || []).find((x) => x.id === p.id || x.name === p.name);
-      if (exist) Object.assign(exist, p, { id: exist.id });
-      else {
+      const exist = (out.places || []).find((x) =>
+        x.id === p.id || x.name === p.name || (p.name && (x.nameJa === p.name || x.query === p.name))
+      );
+      if (exist) {
+        const kind = exist.kind;
+        Object.assign(exist, p, { id: exist.id, kind: kind || p.kind });
+      } else {
         if (!out.places) out.places = [];
         out.places.push(p);
       }
@@ -790,9 +815,10 @@
     const current = trip.days.length ? TripText.serialize(trip) : "";
     return `<section class="card glass">
       <h3>WhatsApp 複製／貼上</h3>
-      <p class="tiny">WhatsApp 複製行程之後，返嚟撳「貼上並更新」（會讀剪貼簿）。「複製呢日」出嚟嗰段都可以貼，會加／更新嗰日。iPhone 可能問准唔准貼。</p>
+      <p class="tiny">第一次用「複製行程」成篇。之後改針／改地點用「複製地點」（短補丁），WhatsApp 唔使拉成篇開機文。撳「貼上並更新」會讀剪貼簿。「複製呢日」會加／更新嗰日。iPhone 可能問准唔准貼。</p>
       <button class="btn" data-act="copy-trip">複製行程</button>
-      <textarea class="field" id="pasteBox" rows="10" placeholder="喺 WhatsApp 複製行程，貼呢度">${esc(current)}</textarea>
+      <button class="btn ghost" style="margin-top:8px" data-act="copy-places">複製地點</button>
+      <textarea class="field" id="pasteBox" rows="10" placeholder="貼成篇行程，或短補丁（侍藍行程／補丁／【地點】）">${esc(current)}</textarea>
       <button class="btn" style="margin-top:8px" data-act="apply-paste">貼上並更新</button>
     </section>`;
   }

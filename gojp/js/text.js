@@ -211,6 +211,24 @@
     return lines.join("\n");
   }
 
+  const COORD_RE = /^-?\d+\.?\d*\s*,\s*-?\d+\.?\d*$/;
+
+  function serializePatch(t, names) {
+    const want = names && names.length
+      ? new Set(names.map((n) => String(n).trim()).filter(Boolean))
+      : null;
+    const list = (t.places || []).filter((p) => {
+      if (!want) return p.lat != null && p.lng != null;
+      return want.has(p.name) || want.has(p.id) || (p.nameJa && want.has(p.nameJa));
+    });
+    const L = ["侍藍行程", "補丁", "", "【地點】"];
+    list.forEach((p) => {
+      const coord = p.lat != null ? `${p.lat},${p.lng}` : "";
+      L.push(coord ? `${p.name}｜${coord}` : p.name);
+    });
+    return L.join("\n") + "\n";
+  }
+
   function destFromMapLine(line) {
     const m = String(line || "").match(/https?:\/\/\S+/);
     if (!m) return "";
@@ -348,6 +366,11 @@
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       if (line === "一日") { t.meta.partial = true; continue; }
+      if (line === "補丁" || line === "起飛補丁") {
+        t.meta.partial = true;
+        t.meta.patch = true;
+        continue;
+      }
       if (!titled && !sec && line && line !== "侍藍行程" && !line.startsWith("【") && !/^v\d+｜/.test(line)) {
         t.meta.title = line;
         titled = true;
@@ -480,16 +503,35 @@
       } else if (sec === "地點") {
         const p = line.split("｜").map((s) => s.trim());
         const name = p[0];
-        const q = p[1] || name;
-        const coord = (p[2] || "").split(",");
-        const rec = { id: slug(name), name, nameJa: q, query: q, address: q, kind: "sight", inGuide: true };
-        if (coord.length === 2 && !isNaN(+coord[0])) {
+        if (!name) continue;
+        let q = "";
+        let coordStr = "";
+        if (p.length >= 3 && COORD_RE.test(p[2])) {
+          q = p[1];
+          coordStr = p[2];
+        } else if (p.length >= 2 && COORD_RE.test(p[1])) {
+          coordStr = p[1];
+          if (p[2] && !COORD_RE.test(p[2])) q = p[2];
+        } else {
+          q = p[1] || "";
+          coordStr = p[2] || "";
+        }
+        const rec = { id: slug(name), name, kind: "sight", inGuide: true };
+        if (q) {
+          rec.nameJa = q;
+          rec.query = q;
+          rec.address = q;
+        }
+        const coord = coordStr.split(",");
+        if (coord.length === 2 && !isNaN(+coord[0]) && !isNaN(+coord[1])) {
           rec.lat = +coord[0];
           rec.lng = +coord[1];
         }
         const exist = t.places.find((x) => x.name === name || x.id === rec.id);
-        if (exist) Object.assign(exist, rec, { id: exist.id });
-        else t.places.push(rec);
+        if (exist) {
+          const kind = exist.kind;
+          Object.assign(exist, rec, { id: exist.id, kind: kind || rec.kind });
+        } else t.places.push(rec);
       } else if (sec === "day" && curDay) {
         const p = line.split("｜").map((s) => s.trim());
         let time = p[0] || "";
@@ -542,6 +584,10 @@
     }
 
     if (!t.days.length) parseHumanDay(raw, t);
+    if ((t.places || []).length && !t.days.length && !t.people.length) {
+      t.meta.partial = true;
+      t.meta.patch = true;
+    }
 
     t.days.forEach((d) => {
       const st = t.stays.find((s) => (s.nights || []).includes(d.date));
@@ -568,5 +614,5 @@
     return t;
   }
 
-  w.TripText = { emptyTrip, serialize, serializeDay, parse };
+  w.TripText = { emptyTrip, serialize, serializeDay, serializePatch, parse };
 })(window);
