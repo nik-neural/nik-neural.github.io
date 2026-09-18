@@ -284,7 +284,14 @@
   function person(id) { return trip.people.find((p) => p.id === id); }
 
   function mapLabel(p) {
-    return (p.nameJa || p.query || p.googleQuery || p.name || "").trim();
+    const cands = [p.nameJa, p.googleQuery, p.name];
+    for (const c of cands) {
+      const s = String(c || "").trim();
+      if (!s) continue;
+      if (/^\d/.test(s) && /\d-\d/.test(s)) continue;
+      return s;
+    }
+    return "";
   }
   function appleURL(p, dir) {
     if (!p) return "https://maps.apple.com/";
@@ -292,7 +299,7 @@
     if (p.lat != null && p.lng != null) {
       const pin = `${p.lat},${p.lng}`;
       if (dir) return `https://maps.apple.com/?daddr=${pin}&q=${label}&dirflg=d`;
-      return `https://maps.apple.com/?ll=${pin}&q=${label}&z=18`;
+      return `https://maps.apple.com/?ll=${pin}&q=${label}&z=17`;
     }
     const q = (p.appleQuery || mapLabel(p) || "").trim();
     if (!q) return "https://maps.apple.com/";
@@ -303,15 +310,19 @@
   function googleURL(p, dir) {
     if (!p) return "https://www.google.com/maps";
     const label = mapLabel(p);
-    if (p.lat != null && p.lng != null) {
-      const pin = `${p.lat},${p.lng}`;
-      if (dir) return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(pin)}&travelmode=driving`;
-      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pin)}`;
+    const hasPin = p.lat != null && p.lng != null;
+    const pin = hasPin ? `${p.lat},${p.lng}` : "";
+    if (dir) {
+      const dest = pin || label;
+      if (!dest) return "https://www.google.com/maps";
+      return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
     }
-    const dest = (p.googleQuery || label || "").trim();
-    if (!dest) return "https://www.google.com/maps";
-    if (dir) return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`;
+    if (label && hasPin) {
+      return `https://www.google.com/maps/place/${encodeURIComponent(label)}/@${p.lat},${p.lng},17z`;
+    }
+    if (label) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(label)}`;
+    if (hasPin) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pin)}`;
+    return "https://www.google.com/maps";
   }
   function placeBlob(p) {
     return `${p.address || ""} ${p.query || ""} ${p.name || ""} ${p.nameJa || ""}`;
@@ -342,25 +353,15 @@
     const label = trip.meta.tiers[String(n)] || `①②③`[n - 1] || "";
     return `<span class="tier t${n}">${esc(label)}</span>`;
   }
-  function navPair(p, dir = true) {
+  function navPair(p, dir = false) {
     if (!p) return "";
     const a = appleURL(p, dir);
     const g = googleURL(p, dir);
     return `
       <div class="navpair">
-        <a class="btn google" href="${g}">${logoG()}<span class="nav-lab">Gemini 導航</span></a>
+        <a class="btn google" href="${g}" target="_blank" rel="noopener">${logoG()}<span class="nav-lab">Gemini 導航</span></a>
         <span class="nav-gap" aria-hidden="true"></span>
-        <a class="btn apple" href="${a}">${logoA()}<span class="nav-lab">Siri 導航</span></a>
-      </div>
-`;
-  }
-  function navPeek(p) {
-    if (!p || !p.id) return "";
-    return `
-      <div class="navpair">
-        <button type="button" class="btn google" data-act="place" data-id="${esc(p.id)}">${logoG()}<span class="nav-lab">Gemini 導航</span></button>
-        <span class="nav-gap" aria-hidden="true"></span>
-        <button type="button" class="btn apple" data-act="place" data-id="${esc(p.id)}">${logoA()}<span class="nav-lab">Siri 導航</span></button>
+        <a class="btn apple" href="${a}" target="_blank" rel="noopener">${logoA()}<span class="nav-lab">Siri 導航</span></a>
       </div>
 `;
   }
@@ -786,7 +787,7 @@
         ${p.parking ? `<div class="tiny">停車 ${esc(p.parking)}</div>` : ""}
         ${p.notes ? `<p class="muted">${esc(p.notes)}</p>` : ""}
         ${p.coordNote ? `<p class="tiny">${esc(p.coordNote)}</p>` : ""}
-        ${navPair(p, true)}
+        ${navPair(p)}
         <button class="btn ghost" style="margin-top:12px" id="sheetClose">關閉</button>
       </div>`;
     $("#sheetClose").onclick = closeSheet;
@@ -873,7 +874,7 @@
         <div class="row"><h3 style="margin:0">今晚住</h3>${tierChip(st.tier)}</div>
         <div class="title" style="font-weight:750;margin:6px 0">${esc(st.short)} · ${esc(st.name)}</div>
         <div class="muted">${esc(st.parking || st.meal || st.notes || "")}</div>
-        ${navPeek(place(st.placeId))}
+        ${navPair(place(st.placeId))}
       </section>` : ""}
 
       <section class="card glass">
@@ -1054,7 +1055,7 @@
         ${s.meal ? `<div class="tiny">${esc(s.meal)}</div>` : ""}
         ${s.parking ? `<div class="tiny">${esc(s.parking)}</div>` : ""}
         ${s.notes ? `<p class="muted">${esc(s.notes)}</p>` : ""}
-        ${p ? navPeek(p) : ""}
+        ${p ? navPair(p) : ""}
       </section>`;
     }).join("");
   }
@@ -1086,7 +1087,7 @@
             ${f.checkinOpen?.label ? `<p class="muted">網上預辦 ${esc(f.checkinOpen.label)}</p>` : ""}
             ${f.notes ? `<p class="muted">${esc(f.notes)}</p>` : ""}
             ${f.checkinUrl ? `<a class="btn" href="${esc(f.checkinUrl)}" style="margin-top:10px">網上預辦</a>` : ""}
-            ${f.placeId || f.to.placeId ? navPeek(place(f.to.placeId || f.from.placeId)) : ""}
+            ${f.placeId || f.to.placeId ? navPair(place(f.to.placeId || f.from.placeId)) : ""}
           </div>
         </article>`;
     }).join("");
@@ -1153,7 +1154,7 @@
           <b>${esc(c.pickup?.date || "")} ${esc(c.pickup?.time || "")}</b>
           <div class="muted">${esc(c.pickup?.who || "")}</div>
           <div class="tiny">${esc(c.pickup?.note || "")}</div>
-          ${navPeek(place(c.pickup?.placeId))}
+          ${navPair(place(c.pickup?.placeId))}
         </div>
       </div>
       <div class="list-item">
@@ -1162,7 +1163,7 @@
           <b>${esc(c.dropoff?.date || "")} ${esc(c.dropoff?.time || "")}</b>
           <div class="muted">${esc(c.dropoff?.who || "")}</div>
           <div class="tiny">${esc(c.dropoff?.note || "")}</div>
-          ${navPeek(place(c.dropoff?.placeId))}
+          ${navPair(place(c.dropoff?.placeId))}
         </div>
       </div>
     </section>`;
