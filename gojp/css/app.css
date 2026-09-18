@@ -386,10 +386,9 @@ html.standalone, html.standalone body, html.standalone #app {
 }
 .stay-bar .stay-md { font-size: 11px; font-weight: 800; letter-spacing: -0.03em; }
 .stay-bar .stay-dow { font-size: 10px; font-weight: 700; opacity: 0.72; }
-.stay-bar .beppu { background: #9ec0e6; color: #0a2f7a; }
-.stay-bar .taisho { background: #c5d4ee; color: #0a2f7a; }
-.stay-bar .jonly { background: rgba(255,255,255,0.28); color: #fff; }
-.stay-bar .jonly .stay-dow { opacity: 0.85; }
+.stay-bar .beppu,
+.stay-bar .taisho,
+.stay-bar .jonly { background: #9ec0e6; color: #0a2f7a; }
 .stay-bar button.on {
   background: #fff;
   color: #0a2f7a;

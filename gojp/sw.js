@@ -1,4 +1,4 @@
-const CACHE = "takeoff-gojp-v21";
+const CACHE = "takeoff-gojp-v22";
 const SHELL = [
   "./",
   "./index.html",
