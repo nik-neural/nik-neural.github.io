@@ -174,6 +174,12 @@ html.standalone, html.standalone body, html.standalone #app {
 }
 .kicker { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ash); font-weight: 700; }
 .hero h2 { margin: 6px 0 4px; font-size: 26px; letter-spacing: -0.03em; font-weight: 750; }
+.hero.plan-hero h2 {
+  font-size: 18px;
+  letter-spacing: 0;
+  line-height: 1.3;
+  font-weight: 750;
+}
 .hero .sub { color: var(--muted); font-size: 13px; line-height: 1.45; }
 .countdown {
   display: flex;
@@ -357,19 +363,50 @@ html.standalone, html.standalone body, html.standalone #app {
 }
 
 .stay-bar {
-  display: flex; gap: 4px; margin: 8px 0 10px;
+  display: flex; gap: 4px; margin: 12px 0 2px;
+  align-items: stretch;
 }
 .stay-bar button {
-  flex: 1; height: 12px; border-radius: 99px; border: 0;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 44px;
+  height: auto;
+  border-radius: 14px;
+  border: 0;
   background: rgba(255,255,255,0.16);
-  padding: 0; cursor: pointer;
+  padding: 6px 2px;
+  cursor: pointer;
+  color: #0a2f7a;
+  line-height: 1.1;
 }
-.stay-bar .beppu { background: #9ec0e6; }
-.stay-bar .taisho { background: #fff; }
-.stay-bar .jonly { background: rgba(255,255,255,0.35); }
+.stay-bar .stay-md { font-size: 11px; font-weight: 800; letter-spacing: -0.03em; }
+.stay-bar .stay-dow { font-size: 10px; font-weight: 700; opacity: 0.72; }
+.stay-bar .beppu { background: #9ec0e6; color: #0a2f7a; }
+.stay-bar .taisho { background: #c5d4ee; color: #0a2f7a; }
+.stay-bar .jonly { background: rgba(255,255,255,0.28); color: #fff; }
+.stay-bar .jonly .stay-dow { opacity: 0.85; }
 .stay-bar button.on {
-  box-shadow: 0 0 0 2px #fff;
-  transform: scaleY(1.25);
+  background: #fff;
+  color: #0a2f7a;
+  box-shadow: none;
+  transform: none;
+}
+.stay-bar button.on .stay-dow { opacity: 0.72; color: #0a2f7a; }
+.stay-add {
+  flex: none;
+  width: 36px;
+  min-height: 44px;
+  border-radius: 14px;
+  background: #1d4fb0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 0;
 }
 
 .list-item {

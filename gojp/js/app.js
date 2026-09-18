@@ -29,7 +29,7 @@
       const st = (trip.stays || []).find((s) => s.id === d.stayId || (s.nights || []).includes(d.date));
       const idx = st ? trip.stays.indexOf(st) : 0;
       const cls = idx <= 0 ? "beppu" : idx === 1 ? "taisho" : "jonly";
-      return { date: d.date, cls, label: st?.short || d.dow || "" };
+      return { date: d.date, cls, label: st?.short || d.dow || "", dow: d.dow || "" };
     });
   }
   function persistTrip() {
@@ -219,6 +219,10 @@
       return `${y}-${m}-${day}`;
     },
     md(ymd) { return ymd.slice(5).replace("-", "/"); },
+    mdShort(ymd) {
+      const p = String(ymd || "").split("-");
+      return p.length >= 3 ? `${+p[1]}/${+p[2]}` : String(ymd || "");
+    },
     hm(ms) {
       if (ms < 0) ms = 0;
       const s = Math.floor(ms / 1000);
@@ -943,22 +947,22 @@
     const d = day(ymd) || trip.days[0];
     if (editDay === d.date) return viewPlanEdit(d);
     const nights = stayNights();
+    const barDays = nights.length
+      ? nights
+      : trip.days.map((x) => ({ date: x.date, cls: "", dow: x.dow || "", label: x.dow || "" }));
     return `
-      <div class="daychip">
-        ${trip.days.map((x) =>
-          `<button class="${x.date === d.date ? "on" : ""}" data-act="plan-day" data-id="${x.date}">${fmt.md(x.date)} ${x.dow}</button>`
-        ).join("")}
-        <button data-act="add-day">＋</button>
-      </div>
-      <section class="hero glass">
+      <section class="hero glass plan-hero">
         <div class="kicker">${d.locked ? "骨架" : "未鎖"}</div>
-        <h2>${fmt.md(d.date)} ${d.dow}</h2>
-        <div class="sub">${esc(d.theme)}</div>
-        ${nights.length ? `<div class="stay-bar">
-          ${nights.map((n) =>
-            `<button type="button" class="${n.cls} ${n.date === d.date ? "on" : ""}" data-act="plan-day" data-id="${n.date}" aria-label="${esc(n.label)} ${fmt.md(n.date)}"></button>`
+        <h2>${esc(d.theme) || `${fmt.md(d.date)} ${d.dow}`}</h2>
+        <div class="stay-bar">
+          ${barDays.map((n) =>
+            `<button type="button" class="${n.cls} ${n.date === d.date ? "on" : ""}" data-act="plan-day" data-id="${n.date}" aria-label="${fmt.mdShort(n.date)} ${esc(n.dow || "")}">
+              <span class="stay-md">${fmt.mdShort(n.date)}</span>
+              <span class="stay-dow">${esc(n.dow || "")}</span>
+            </button>`
           ).join("")}
-        </div>` : ""}
+          <button type="button" class="stay-add" data-act="add-day" aria-label="加一日">＋</button>
+        </div>
       </section>
       <section class="card glass" id="timeline-card">
         <div class="row">
