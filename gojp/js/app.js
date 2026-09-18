@@ -626,26 +626,6 @@
       planDate = remain[Math.min(idx, remain.length - 1)] || remain[0] || null;
       toast("已刪呢日");
       render();
-    } else if (act === "copy-trip") {
-      const text = TripText.serialize(trip);
-      navigator.clipboard.writeText(text).then(() => toast("已複製，去 WhatsApp 貼上")).catch(() => {
-        morePage = "paste";
-        render();
-        toast("複製唔到，去貼上頁手動揀");
-      });
-    } else if (act === "copy-places") {
-      const text = TripText.serializePatch(trip);
-      if (!text.split("\n").some((l) => l.includes("｜"))) {
-        toast("未有地點座標");
-        return;
-      }
-      navigator.clipboard.writeText(text).then(() => toast("已複製地點補丁，WhatsApp 貼團友")).catch(() => {
-        morePage = "paste";
-        render();
-        const box = $("#pasteBox");
-        if (box) box.value = text;
-        toast("複製唔到，去貼上頁手動揀");
-      });
     } else if (act === "apply-paste") {
       applyPastedTrip();
     }
@@ -669,12 +649,12 @@
     const nPlaces = (parsed.places || []).length;
     const patch = !!parsed.meta.patch || (nPlaces && !parsed.days.length && !parsed.people.length);
     if (!parsed.days.length && !parsed.people.length && !nPlaces) {
-      toast("認唔到。貼「複製行程」、「複製呢日」或地點補丁");
+      toast("認唔到。貼開機文、地點補丁或「複製呢日」");
       return;
     }
     if (patch) {
       if (!(trip.days.length || trip.places.length)) {
-        toast("未有行程。先貼「複製行程」成篇");
+        toast("未有行程。先喺 WhatsApp 複製開機文再貼");
         return;
       }
       trip = mergeIncoming(trip, parsed);
@@ -825,19 +805,16 @@
     return `<section class="hero glass">
       <div class="kicker">起飛</div>
       <h2>未有行程</h2>
-      <p class="sub">從 WhatsApp 複製行程文字，貼呢度。改完再複製傳返去。</p>
+      <p class="sub">從 WhatsApp 複製開機文，貼呢度更新。</p>
     </section>
     ${viewPaste()}`;
   }
 
   function viewPaste() {
-    const current = trip.days.length ? TripText.serialize(trip) : "";
     return `<section class="card glass">
-      <h3>WhatsApp 複製／貼上</h3>
-      <p class="tiny">第一次用「複製行程」成篇。之後改針／改地點用「複製地點」（短補丁），WhatsApp 唔使拉成篇開機文。撳「貼上並更新」會讀剪貼簿。「複製呢日」會加／更新嗰日。iPhone 可能問准唔准貼。</p>
-      <button class="btn" data-act="copy-trip">複製行程</button>
-      <button class="btn ghost" style="margin-top:8px" data-act="copy-places">複製地點</button>
-      <textarea class="field" id="pasteBox" rows="10" placeholder="貼成篇行程，或短補丁（侍藍行程／補丁／【地點】）">${esc(current)}</textarea>
+      <h3>WhatsApp 貼上</h3>
+      <p class="tiny">WhatsApp 複製開機文或地點補丁，返嚟撳「貼上並更新」（會讀剪貼簿）。iPhone 可能問准唔准貼。單日用行程頁「複製呢日」。</p>
+      <textarea class="field" id="pasteBox" rows="6" placeholder="貼開機文或短補丁"></textarea>
       <button class="btn" style="margin-top:8px" data-act="apply-paste">貼上並更新</button>
     </section>`;
   }
@@ -1098,7 +1075,7 @@
   }
 
   function viewMore() {
-    if (morePage === "paste") return withBack("複製／貼上", viewPaste());
+    if (morePage === "paste") return withBack("貼上", viewPaste());
     if (morePage === "places") return viewPlaces();
     if (morePage === "unlocked") return viewUnlocked();
     if (morePage === "car") return withBack("租車", viewCar());
@@ -1109,8 +1086,8 @@
     const nOpen = trip.unlocked.length;
     return `<section class="card glass">
       <h3>更多</h3>
-      <p class="tiny">內頁分開睇。改行程用編輯；傳團友用複製貼上。</p>
-      ${menu("paste", "📋", "複製／貼上行程", "WhatsApp 一鍵")}
+      <p class="tiny">內頁分開睇。改行程用編輯；WhatsApp 更新用貼上。</p>
+      ${menu("paste", "📋", "貼上行程", "WhatsApp 更新")}
       ${menu("places", "📍", "地點 · Maps guide", `${nPlace} 個點`)}
       ${menu("unlocked", "📝", "未鎖清單", `${nOpen} 項`)}
       ${menu("car", "🚗", "租車 · ORIX", "取車／還車")}
