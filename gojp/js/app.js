@@ -313,20 +313,27 @@
     if (dir) return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`;
   }
+  function placeBlob(p) {
+    return `${p.address || ""} ${p.query || ""} ${p.name || ""} ${p.nameJa || ""}`;
+  }
+  function placeKeys(p) {
+    const b = placeBlob(p);
+    const keys = b.match(/\d{3,5}-\d{1,4}/g) || [];
+    if (/東莊園|ふくの宿|Fukunoyado/i.test(b)) keys.push("tok:fukuno");
+    return keys;
+  }
   function fixupPlaces() {
     const withC = (trip.places || []).filter((p) => p.lat != null && p.lng != null);
     (trip.places || []).forEach((p) => {
       if (p.lat != null) return;
-      const blob = `${p.address || ""} ${p.query || ""} ${p.name || ""}`;
-      const keys = blob.match(/\d{3,5}-\d{1,4}/g) || [];
-      const hit = withC.find((q) => {
-        const qb = `${q.address || ""} ${q.query || ""} ${q.name || ""}`;
-        return keys.some((k) => qb.includes(k));
-      });
+      const keys = placeKeys(p);
+      if (!keys.length) return;
+      const hit = withC.find((q) => placeKeys(q).some((k) => keys.includes(k)));
       if (hit) {
         p.lat = hit.lat;
         p.lng = hit.lng;
         if (hit.googleQuery) p.googleQuery = hit.googleQuery;
+        if (hit.nameJa && !p.nameJa) p.nameJa = hit.nameJa;
       }
     });
   }
@@ -337,14 +344,23 @@
   }
   function navPair(p, dir = true) {
     if (!p) return "";
-    const googleOn = store.role !== "copilot";
     const a = appleURL(p, dir);
     const g = googleURL(p, dir);
     return `
       <div class="navpair">
-        <a class="btn ${googleOn ? "" : "ghost"} google" href="${g}">${logoG()}<span class="nav-lab">Gemini 導航</span></a>
+        <a class="btn google" href="${g}">${logoG()}<span class="nav-lab">Gemini 導航</span></a>
         <span class="nav-gap" aria-hidden="true"></span>
-        <a class="btn ${googleOn ? "ghost" : ""} apple" href="${a}">${logoA()}<span class="nav-lab">Siri 導航</span></a>
+        <a class="btn apple" href="${a}">${logoA()}<span class="nav-lab">Siri 導航</span></a>
+      </div>
+`;
+  }
+  function navPeek(p) {
+    if (!p || !p.id) return "";
+    return `
+      <div class="navpair">
+        <button type="button" class="btn google" data-act="place" data-id="${esc(p.id)}">${logoG()}<span class="nav-lab">Gemini 導航</span></button>
+        <span class="nav-gap" aria-hidden="true"></span>
+        <button type="button" class="btn apple" data-act="place" data-id="${esc(p.id)}">${logoA()}<span class="nav-lab">Siri 導航</span></button>
       </div>
 `;
   }
@@ -753,6 +769,9 @@
   function openPlace(id) {
     const p = place(id);
     if (!p) return;
+    const sub = (p.nameJa || "").trim();
+    const addr = (p.address || p.query || "").trim();
+    const addrLine = addr && addr !== sub && addr !== p.name ? addr : "";
     const sheet = $("#sheet");
     sheet.classList.add("on");
     sheet.innerHTML = `
@@ -760,19 +779,14 @@
         <div class="handle"></div>
         <div class="row"><span class="kicker">${esc(p.kind)}</span>${tierChip(p.coordTier || 1)}</div>
         <h2 style="margin:8px 0 4px">${esc(p.name)}</h2>
-        <div class="muted">${esc(p.nameJa || "")}</div>
-        <div class="muted" style="margin-top:8px">${esc(p.address || p.query || "")}</div>
+        ${sub ? `<div class="muted">${esc(sub)}</div>` : ""}
+        ${addrLine ? `<div class="muted" style="margin-top:8px">${esc(addrLine)}</div>` : ""}
         ${p.hours ? `<div class="tiny" style="margin-top:8px">時間 ${esc(p.hours)}</div>` : ""}
         ${p.phone ? `<div class="tiny">電話 <a href="tel:${esc(p.phone)}" style="color:#fff">${esc(p.phone)}</a></div>` : ""}
         ${p.parking ? `<div class="tiny">停車 ${esc(p.parking)}</div>` : ""}
         ${p.notes ? `<p class="muted">${esc(p.notes)}</p>` : ""}
         ${p.coordNote ? `<p class="tiny">${esc(p.coordNote)}</p>` : ""}
         ${navPair(p, true)}
-        <div class="navpair" style="margin-top:8px">
-          <a class="btn ghost small" href="${googleURL(p, false)}">${logoG()}<span class="nav-lab">地點詳情</span></a>
-          <span class="nav-gap" aria-hidden="true"></span>
-          <a class="btn ghost small" href="${appleURL(p, false)}">${logoA()}<span class="nav-lab">地點詳情</span></a>
-        </div>
         <button class="btn ghost" style="margin-top:12px" id="sheetClose">關閉</button>
       </div>`;
     $("#sheetClose").onclick = closeSheet;
@@ -859,7 +873,7 @@
         <div class="row"><h3 style="margin:0">今晚住</h3>${tierChip(st.tier)}</div>
         <div class="title" style="font-weight:750;margin:6px 0">${esc(st.short)} · ${esc(st.name)}</div>
         <div class="muted">${esc(st.parking || st.meal || st.notes || "")}</div>
-        ${navPair(place(st.placeId), true)}
+        ${navPeek(place(st.placeId))}
       </section>` : ""}
 
       <section class="card glass">
@@ -1040,7 +1054,7 @@
         ${s.meal ? `<div class="tiny">${esc(s.meal)}</div>` : ""}
         ${s.parking ? `<div class="tiny">${esc(s.parking)}</div>` : ""}
         ${s.notes ? `<p class="muted">${esc(s.notes)}</p>` : ""}
-        ${p ? navPair(p, true) : ""}
+        ${p ? navPeek(p) : ""}
       </section>`;
     }).join("");
   }
@@ -1072,7 +1086,7 @@
             ${f.checkinOpen?.label ? `<p class="muted">網上預辦 ${esc(f.checkinOpen.label)}</p>` : ""}
             ${f.notes ? `<p class="muted">${esc(f.notes)}</p>` : ""}
             ${f.checkinUrl ? `<a class="btn" href="${esc(f.checkinUrl)}" style="margin-top:10px">網上預辦</a>` : ""}
-            ${f.placeId || f.to.placeId ? navPair(place(f.to.placeId || f.from.placeId), true) : ""}
+            ${f.placeId || f.to.placeId ? navPeek(place(f.to.placeId || f.from.placeId)) : ""}
           </div>
         </article>`;
     }).join("");
@@ -1088,16 +1102,7 @@
     if (morePage === "settings") return withBack("呢部機", viewSettings());
     const nPlace = trip.places.filter((p) => p.inGuide).length;
     const nOpen = trip.unlocked.length;
-    const googleOn = store.role !== "copilot";
     return `<section class="card glass">
-      <h3>地圖</h3>
-      <p class="tiny">預設 Google。只影響呢部機導航掣，唔使一開 App 就揀。</p>
-      <div class="choice-row">
-        <button class="btn ${googleOn ? "" : "ghost"}" data-act="set-role" data-role="driver">${logoG()}<span class="nav-lab">Google 地圖</span></button>
-        <button class="btn ${googleOn ? "ghost" : ""}" data-act="set-role" data-role="copilot">${logoA()}<span class="nav-lab">蘋果地圖</span></button>
-      </div>
-    </section>
-    <section class="card glass">
       <h3>更多</h3>
       <p class="tiny">內頁分開睇。改行程用編輯；傳團友用複製貼上。</p>
       ${menu("paste", "📋", "複製／貼上行程", "WhatsApp 一鍵")}
@@ -1123,7 +1128,7 @@
   function viewPlaces() {
     const guide = trip.places.filter((p) => p.inGuide);
     return `${withBack("地點", "")}<section class="card glass">
-      <p class="tiny">撳一格開 Gemini／Siri 導航。</p>
+      <p class="tiny">撳一格睇地點，核對完先導航。</p>
       ${guide.map((p) => `
         <button class="menu" data-act="place" data-id="${p.id}">
           <div class="ico">${iconFor(p.kind)}</div>
@@ -1148,7 +1153,7 @@
           <b>${esc(c.pickup?.date || "")} ${esc(c.pickup?.time || "")}</b>
           <div class="muted">${esc(c.pickup?.who || "")}</div>
           <div class="tiny">${esc(c.pickup?.note || "")}</div>
-          ${navPair(place(c.pickup?.placeId), true)}
+          ${navPeek(place(c.pickup?.placeId))}
         </div>
       </div>
       <div class="list-item">
@@ -1157,7 +1162,7 @@
           <b>${esc(c.dropoff?.date || "")} ${esc(c.dropoff?.time || "")}</b>
           <div class="muted">${esc(c.dropoff?.who || "")}</div>
           <div class="tiny">${esc(c.dropoff?.note || "")}</div>
-          ${navPair(place(c.dropoff?.placeId), true)}
+          ${navPeek(place(c.dropoff?.placeId))}
         </div>
       </div>
     </section>`;

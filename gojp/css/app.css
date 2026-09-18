@@ -260,6 +260,7 @@ html.standalone, html.standalone body, html.standalone #app {
   margin-top: 10px;
   align-items: stretch;
 }
+.navpair > .btn { width: 100%; }
 .nav-gap { display: block; min-width: 10px; }
 .btn {
   appearance: none; border: 0;
@@ -287,8 +288,17 @@ html.standalone, html.standalone body, html.standalone #app {
 }
 .logo { width: 16px; height: 16px; flex: none; display: block; }
 .nav-lab { line-height: 1; display: inline-block; }
-.btn.apple .logo { transform: translateY(-1px); }
-.btn.google { }
+.btn.google {
+  background: #fff;
+  color: #111;
+  box-shadow: 0 6px 16px rgba(0, 20, 80, 0.18);
+}
+.btn.apple {
+  background: #111;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+}
+.btn.apple .logo { transform: translateY(-1px); color: #fff; }
 .btn.wa {
   background: linear-gradient(180deg, #25d366, #1ebe57);
   color: white;
