@@ -440,14 +440,17 @@
   function person(id) { return trip.people.find((p) => p.id === id); }
 
   function mapLabel(p) {
-    const cands = [p.nameJa, p.googleQuery, p.name];
+    const cands = [p.googleQuery, p.nameJa, p.name];
+    let fallback = "";
     for (const c of cands) {
       const s = String(c || "").trim();
       if (!s) continue;
       if (/^\d/.test(s) && /\d-\d/.test(s)) continue;
-      return s;
+      const cleaned = s.replace(/\s+\S*\d+-\d+\S*$/u, "").trim();
+      if (cleaned) return cleaned;
+      if (!fallback) fallback = s;
     }
-    return "";
+    return fallback;
   }
   function appleURL(p, dir) {
     if (!p) return "https://maps.apple.com/";
@@ -473,9 +476,6 @@
       if (!dest) return "https://www.google.com/maps";
       return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
     }
-    if (label && hasPin) {
-      return `https://www.google.com/maps/place/${encodeURIComponent(label)}/@${p.lat},${p.lng},17z`;
-    }
     if (label) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(label)}`;
     if (hasPin) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pin)}`;
     return "https://www.google.com/maps";
@@ -489,7 +489,21 @@
     if (/東莊園|ふくの宿|Fukunoyado/i.test(b)) keys.push("tok:fukuno");
     return keys;
   }
+  function pinPatches() {
+    (trip.places || []).forEach((p) => {
+      const blob = `${p.id || ""} ${p.name || ""} ${p.nameJa || ""} ${p.query || ""}`;
+      if (/椎葉/.test(blob)) return;
+      if (!/大正屋|taishoya/i.test(blob)) return;
+      p.lat = 33.096001;
+      p.lng = 129.983037;
+      p.nameJa = "嬉野温泉大正屋";
+      p.googleQuery = "嬉野温泉大正屋";
+      p.query = "嬉野温泉大正屋";
+      p.address = "佐賀縣嬉野市嬉野町下宿乙2276-1";
+    });
+  }
   function fixupPlaces() {
+    pinPatches();
     const withC = (trip.places || []).filter((p) => p.lat != null && p.lng != null);
     (trip.places || []).forEach((p) => {
       if (p.lat != null) return;
