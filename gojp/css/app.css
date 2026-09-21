@@ -146,6 +146,27 @@ html.standalone, html.standalone body, html.standalone #app {
   font-size: 12px; font-weight: 700; text-decoration: none;
 }
 
+.pwx {
+  margin: 10px 0 2px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.pwx-temp { font-weight: 750; font-size: 14px; }
+.pwx-dress { margin-top: 4px; font-size: 13px; line-height: 1.35; }
+.pwx-slot { display: inline-flex; align-items: center; }
+.block .pwx-slot, .menu .pwx-slot { display: block; margin: 4px 0 2px; }
+.pwx-chip {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  white-space: nowrap;
+}
+.pwx-chip.muted { opacity: 0.55; font-weight: 600; }
+
 .pill {
   border: 0;
   background: #1d4fb0;

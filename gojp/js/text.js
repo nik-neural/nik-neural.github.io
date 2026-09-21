@@ -98,10 +98,7 @@
     L.push("");
     L.push("【團友】");
     (t.people || []).forEach((p) => {
-      const roles = p.roles || [];
-      const role = roles.includes("driver") ? "主駕駛" : roles.includes("copilot") ? "副駕駛" : "";
       const bits = [p.display];
-      if (role) bits.push(role);
       if ((p.flights || []).length) bits.push(p.flights.join(" "));
       L.push(bits.join("｜"));
       if (p.freqNote && !/確認號/.test(p.freqNote) && !/^[A-Z0-9]{5,7}$/i.test(p.freqNote.trim())) {
