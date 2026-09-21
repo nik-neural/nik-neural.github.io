@@ -153,7 +153,6 @@ html.standalone, html.standalone body, html.standalone #app {
   background: rgba(255, 255, 255, 0.08);
 }
 .pwx-temp { font-weight: 750; font-size: 14px; }
-.pwx-dress { margin-top: 4px; font-size: 13px; line-height: 1.35; }
 .pwx-slot { display: inline-flex; align-items: center; }
 .block .pwx-slot, .menu .pwx-slot { display: block; margin: 4px 0 2px; }
 .pwx-chip {

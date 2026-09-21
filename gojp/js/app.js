@@ -220,19 +220,7 @@
   }
   function typicalOct(elev) {
     const e = (elev || 50) / 1000;
-    return { hi: Math.round(23 - 6.5 * e), lo: Math.round(16 - 6.5 * e), wind: 15, src: "typical" };
-  }
-  function dressLine(t, wind) {
-    let wear = t >= 22 ? "薄衫得" : t >= 18 ? "薄長袖" : t >= 14 ? "衛衣／薄外套" : t >= 10 ? "外套" : "厚外套";
-    if ((wind || 0) >= 25) wear += " · 風大";
-    return wear;
-  }
-  function wearTemp(rec, hm) {
-    if (rec.at != null) return rec.at;
-    if (hm && hm < "11:00" && rec.lo != null && rec.hi != null) {
-      return Math.round((rec.hi + rec.lo) / 2);
-    }
-    return rec.hi;
+    return { hi: Math.round(23 - 6.5 * e), lo: Math.round(16 - 6.5 * e), src: "typical" };
   }
   function pwxKey(p, ymd) {
     return `${Number(p.lat).toFixed(4)},${Number(p.lng).toFixed(4)},${ymd}`;
@@ -313,18 +301,16 @@
     pwx.inflight[key] = run;
     return run;
   }
-  function compactWxHtml(rec, hm) {
-    const t = wearTemp(rec, hm);
-    return `<span class="pwx-chip">${t}° · ${esc(dressLine(t, rec.wind))}</span>`;
+  function compactWxHtml(rec) {
+    if (rec.hi == null || rec.lo == null) return "";
+    return `<span class="pwx-chip">${rec.hi}°／${rec.lo}°</span>`;
   }
   function fullWxHtml(rec, hm) {
-    const t = wearTemp(rec, hm);
-    const hourBit = rec.at != null && hm ? ` · ${esc(hm)} 約 ${rec.at}°` : "";
-    const sky = rec.code != null ? `${wxIcon(rec.code)} ` : "";
+    if (rec.hi == null || rec.lo == null) return "";
+    const hourBit = rec.at != null && hm ? ` · ${esc(hm)} ${rec.at}°` : "";
     return `<div class="pwx">
-      <div class="pwx-temp">${sky}高 ${rec.hi}°　低 ${rec.lo}°${hourBit}</div>
-      <div class="pwx-dress">着衫：${esc(dressLine(t, rec.wind))}</div>
-      <div class="tiny">${esc(srcLabel(rec.src))}${rec.elev ? ` · ${rec.elev}m` : ""}</div>
+      <div class="pwx-temp">高 ${rec.hi}°　低 ${rec.lo}°${hourBit}</div>
+      <div class="tiny">${esc(srcLabel(rec.src))}</div>
     </div>`;
   }
   function paintPlaceWx() {
@@ -340,10 +326,10 @@
         pwx.cache[key] = { ...typicalOct(elev), elev, ymd };
       }
       const rec = pwx.cache[key];
-      el.innerHTML = compact ? compactWxHtml(rec, hm) : fullWxHtml(rec, hm);
+      el.innerHTML = compact ? compactWxHtml(rec) : fullWxHtml(rec, hm);
       fetchPlaceWx(p, ymd, hm).then((next) => {
         if (!next || !el.isConnected) return;
-        el.innerHTML = compact ? compactWxHtml(next, hm) : fullWxHtml(next, hm);
+        el.innerHTML = compact ? compactWxHtml(next) : fullWxHtml(next, hm);
       });
     });
   }
