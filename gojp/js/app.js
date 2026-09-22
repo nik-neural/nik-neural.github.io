@@ -3,12 +3,20 @@
   const SEED_URL = "./data/trip.json";
   const KEY = "kyushu2026.v3";
   const TABS = [
-    { id: "today", label: "今日", ic: "◎" },
-    { id: "plan", label: "行程", ic: "☰" },
-    { id: "stay", label: "住", ic: "⌂" },
-    { id: "fly", label: "航班", ic: "✈" },
-    { id: "more", label: "更多", ic: "…" },
+    { id: "today", label: "今日" },
+    { id: "plan", label: "行程" },
+    { id: "stay", label: "住" },
+    { id: "fly", label: "航班" },
+    { id: "more", label: "更多" },
   ];
+  // 系統字 ✈／⌂／… 墨水大細同左右留白唔同，底欄會歪。同一 viewBox，墨水外框對齊 12,12。
+  const TAB_ICON = {
+    today: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.15" fill="currentColor"/></svg>',
+    plan: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.6 4.6h14.8M4.6 12h14.8M4.6 19.4h14.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    stay: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.6 11.5 12 4.6 19.4 11.5V19.4H4.6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+    fly: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.5 3.5 15.51 10.41 17.88 18.38 15.95 20.3 13.32 12.95 9.65 18.9 7.72 18.73 10.7 13.3 5.27 16.28 5.1 14.35 11.05 10.68 3.7 8.05 5.62 6.12 13.59 8.49Z"/></svg>',
+    more: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.4" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="18.6" cy="12" r="1.8" fill="currentColor"/></svg>',
+  };
 
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -631,7 +639,7 @@
 
   function bind() {
     $("#tabs").innerHTML = TABS.map((t) =>
-      `<button data-tab="${t.id}"><span class="ic">${t.ic}</span>${t.label}</button>`
+      `<button type="button" data-tab="${t.id}"><span class="ic">${TAB_ICON[t.id]}</span>${t.label}</button>`
     ).join("");
     $("#tabs").addEventListener("click", (e) => {
       const b = e.target.closest("button");
