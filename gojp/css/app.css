@@ -82,21 +82,9 @@ html.standalone, html.standalone body, html.standalone #app {
 @media (display-mode: standalone) {
   body::before,
   body::after { top: 12px; }
-  .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 8;
-    background-color: #061433;
-  }
 }
 html.standalone body::before,
 html.standalone body::after { top: 12px; }
-html.standalone .topbar {
-  position: sticky;
-  top: 0;
-  z-index: 8;
-  background-color: #061433;
-}
 
 .glass {
   background: #15408f;
@@ -113,6 +101,30 @@ html.standalone .topbar {
   align-items: center;
   gap: 10px;
   z-index: 5;
+}
+@media (display-mode: standalone) {
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 8;
+    background-color: #061433;
+    width: calc(100% + 24px);
+    margin-left: -12px;
+    margin-right: -12px;
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+}
+html.standalone .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  background-color: #061433;
+  width: calc(100% + 24px);
+  margin-left: -12px;
+  margin-right: -12px;
+  padding-left: 28px;
+  padding-right: 28px;
 }
 .brand {
   display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;
